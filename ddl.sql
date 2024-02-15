@@ -10,8 +10,15 @@ CREATE TABLE persons(
     
     PRIMARY KEY(id)
 );
+DELIMITER //
 CREATE TRIGGER generate_person_id_trigger BEFORE INSERT ON persons
-	FOR EACH ROW SET NEW.id = UUID_SHORT();
+	FOR EACH ROW
+    BEGIN
+		SET NEW.id = UUID_SHORT();
+        SET @last_person_uuid = NEW.id;
+	END//
+    
+DELIMITER ;
 
 DROP TABLE IF EXISTS dcs;
 CREATE TABLE dcs(
@@ -47,8 +54,6 @@ CREATE TABLE operators(
     UNIQUE(id, dep),
     FOREIGN KEY (id) REFERENCES persons(id)
 );
-CREATE TRIGGER generate_operator_id_trigger BEFORE INSERT ON operators
-	FOR EACH ROW SET NEW.id = UUID_SHORT();
 
 DROP TABLE IF EXISTS locations;
 CREATE TABLE locations(
@@ -123,7 +128,10 @@ CREATE TABLE visits(
     FOREIGN KEY (visitor,visitor_paper) REFERENCES id_papers(person,number)
 );
 
-
+DROP VIEW IF EXISTS papers_persons;    
+CREATE VIEW papers_persons AS
+	SELECT type,number,last_name,first_name
+	FROM id_papers JOIN persons ON(id_papers.person = persons.id);
 
 
 
